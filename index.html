@@ -6,106 +6,137 @@
     <title>Gadaa Bingo</title>
     <style>
         body { background-color: #0b141a; color: #ffffff; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 10px; }
-        .dashboard { display: none; justify-content: space-around; background-color: #111d25; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .dashboard { display: flex; justify-content: space-around; background-color: #111d25; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .stat-box { font-size: 14px; }
         .stat-title { color: #8696a0; font-weight: bold; }
         .stat-value { color: #00a884; font-size: 18px; font-weight: bold; margin-top: 5px; }
-        .timer { color: #00a884; font-size: 20px; margin: 15px 0; font-weight: bold; }
-        .announcement { background-color: #20303c; padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 22px; color: #00e676; min-height: 40px; font-weight: bold; }
-        .grid-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 100%; margin: 0 auto 20px auto; max-height: 380px; overflow-y: auto; padding: 5px; background-color: #111d25; border-radius: 8px; }
+        .timer { color: #ff9800; font-size: 20px; margin: 15px 0; font-weight: bold; }
+        .announcement { background-color: #20303c; padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 26px; color: #00e676; font-weight: bold; min-height: 40px; }
+        .grid-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 100%; margin: 0 auto; max-height: 380px; overflow-y: auto; padding: 5px; background-color: #111d25; border-radius: 8px; }
         .card { background-color: #20303c; border: 1px solid #2a3942; border-radius: 6px; padding: 12px 0; font-size: 16px; font-weight: bold; color: #e9edef; cursor: pointer; }
         .card.selected { background-color: #00a884; color: #000000; }
         .card.matched { background-color: #ff9800 !important; color: #ffffff !important; }
-        .btn-join { background-color: #00a884; color: #111d25; border: none; border-radius: 8px; padding: 15px 0; width: 100%; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .game-board { display: none; flex-direction: column; align-items: center; }
+        .bingo-letters { display: flex; justify-content: space-between; width: 100%; max-width: 360px; margin-bottom: 10px; font-size: 20px; font-weight: bold; color: #00e676; }
+        .btn-join { background-color: #00a884; color: #111d25; border: none; border-radius: 8px; padding: 15px 0; width: 100%; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard" id="gameDashboard">
+    <div class="dashboard">
         <div class="stat-box"><div class="stat-title">MEDEB</div><div class="stat-value">10 Br</div></div>
         <div class="stat-box"><div class="stat-title">PLAYERS</div><div class="stat-value" id="playerCount">0</div></div>
         <div class="stat-box"><div class="stat-title">BALANCE</div><div class="stat-value" id="userBalance">0 Br</div></div>
         <div class="stat-box"><div class="stat-title">DERASH</div><div class="stat-value" id="derashValue">0 Br</div></div>
     </div>
 
-    <div class="timer" id="gameTimer">Maaloo Kaardii Filadhaa!</div>
-    <div class="announcement" id="callBox">Tapha Jalqabuuf Kaardii Tuqaa</div>
+    <div id="selectionScreen">
+        <div class="timer" id="gameTimer">Select Cartala (Up to 5)</div>
+        <div class="grid-container" id="cardGrid"></div>
+        <button class="btn-join" id="joinBtn" onclick="confirmSelection()">JOIN GAME</button>
+    </div>
 
-    <div class="grid-container" id="cardGrid"></div>
-    <button class="btn-join" id="joinBtn" onclick="joinGame()">JOIN GAME</button>
+    <div id="gameScreen" class="game-board">
+        <div class="timer" id="liveStatus">🔴 TAPHA KEESSA JIRTAN</div>
+        <div class="announcement" id="callBox">Jalqabuuf...</div>
+        <div class="bingo-letters">
+            <span>B</span><span>I</span><span>N</span><span>G</span><span>O</span>
+        </div>
+        <div class="grid-container" id="liveGrid"></div>
+    </div>
 
     <script>
-        const amharicNums = ["","አንድ","ሁለት","ሦስት","አራት","አምስት","ስድስት","ሰባት","ስምንት","ዘጠኝ","አሥር","አሥራ አንድ","አሥራ ሁለት","አሥራ ሦስት","አሥራ አራት","አሥራ አምስት","አሥራ ስድስት","አሥራ ሰባት","አሥራ ስምንት","አሥራ ዘጠኝ","ሃያ","ሃያ አንድ","ሃያ ሁለት","ሃያ ሦስት","ሃያ አራት","ሃያ አምስት","ሃያ ስድስት","ሃያ ሰባት","ሃያ ስምንት","ሃያ ዘጠኝ","ሰላሳ","ሰላሳ አንድ","ሰላሳ ሁለት","ሰላሳ ሦስት","ሰላሳ አራት","ሰላሳ አምስት","ሰላሳ ስድስት","ሰላሳ ሰባት","ሰላሳ ስምንት","ሰላሳ ዘጠኝ","አርባ","አርባ አንድ","አርባ ሁለት","አርባ ሦስት","አርባ አራት","አርባ አምስት","አርባ ስድስት","አርባ ሰባት","አርባ ስምንት","አርባ ዘጠኝ","ሀምሳ","ሀምሳ አንድ","ሀምሳ ሁለት","ሀምሳ ሦስት","ሀምሳ አራት","ሀምሳ አምስት","ሀምሳ ስድስት","ሀምሳ ሰባት","ሀምሳ ስምንት","ሀምሳ ዘጠኝ","ስድሳ","ስድሳ አንድ","ስድሳ ሁለት","ስድሳ ሦስት","ስድሳ አራት","ስድሳ አምስት","ስድሳ ስድስት","ስድሳ ሰባት","ስድሳ ስምንት","ስድሳ ዘጠኝ","ሰባ","ሰባ አንድ","ሰባ ሁለት","ሰባ ሦስት","ሰባ አራት","ሰባ አምስት"];
+        const amharicVoiceNums = ["","አንድ","ሁለት","ሦስት","አራት","አምስት","ስድስት","ሰባት","ስምንት","ዘጠኝ","አሥር","አሥራ አንድ","አሥራ ሁለት","አሥራ ሦስት","አሥራ አራት","አሥራ አምስት","አሥራ ስድስት","አሥራ ሰባት","አሥራ ስምንት","አሥራ ዘጠኝ","ሃያ","ሃያ አንድ","ሃያ ሁለት","ሃያ ሦስት","ሃያ አራት","ሃያ አምስት","ሃያ ስድስት","ሃያ ሰባት","ሃያ ስምንት","ሃያ ዘጠኝ","ሰላሳ","ሰላሳ አንድ","ሰላሳ ሁለት","ሰላሳ ሦስት","ሰላሳ አራት","ሰላሳ አምስት","ሰላሳ ስድስት","ሰላሳ ሰባት","ሰላሳ ስምንት","ሰላሳ ዘጠኝ","አርባ","አርባ አንድ","አርባ ሁለት","አርባ ሦስት","አርባ አራት","አርባ አምስት","አርባ ስድስት","አርባ ሰባት","አርባ ስምንት","አርባ ዘጠኝ","ሀምሳ","ሀምሳ አንድ","ሀምሳ ሁለት","ሀምሳ ሦስት","ሀምሳ አራት","ሀምሳ አምስት","ሀምሳ ስድስት","ሀምሳ ሰባት","ሀምሳ ስምንት","ሀምሳ ዘጠኝ","ስድሳ","ስድሳ አንድ","ስድሳ ሁለት","ስድሳ ሦስት","ስድሳ አራት","ስድሳ አምስት","ስድሳ ስድስት","ስድሳ ሰባት","ስድሳ ስምንት","ስድሳ ዘጠኝ","ሰባ","ሰባ አንድ","ሰባ ሁለት","ሰባ ሦስት","ሰባ አራት","ሰባ አምስት"];
 
         const grid = document.getElementById('cardGrid');
         let selectedCards = new Set();
-        let myCards = [];
+        let countdown = 30;
+        let timerInterval, gameInterval;
+        let countdownStarted = false;
+        let totalWallet = 0;
 
+        // Generate 200 cards
         for (let i = 1; i <= 200; i++) {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerText = i;
-            card.id = "card_" + i;
+            card.id = "sel_" + i;
             card.onclick = function() {
-                if(!gameStarted) {
-                    this.classList.toggle('selected');
-                    if(this.classList.contains('selected')) {
-                        selectedCards.add(i);
-                        if(selectedCards.size === 1) startCountdown(); 
-                    } else {
-                        selectedCards.delete(i);
-                    }
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('selected');
+                    selectedCards.delete(i);
+                } else {
+                    if (selectedCards.size >= 5) return alert("Kaardii 5 qofa filachuu dandeessa!");
+                    this.classList.add('selected');
+                    selectedCards.add(i);
+                    if (!countdownStarted) startTimer();
                 }
+                updateDashboard();
             };
             grid.appendChild(card);
         }
 
-        let players = 0;
-        let derash = 0;
-        let countdown = 30;
-        let timerInterval, gameInterval;
-        let gameStarted = false;
-        let countdownStarted = false;
+        function updateDashboard() {
+            let count = selectedCards.size;
+            document.getElementById('playerCount').innerText = count;
+            document.getElementById('derashValue').innerText = (count * 8) + " Br";
+        }
 
-        function startCountdown() {
-            if (countdownStarted) return;
+        function startTimer() {
             countdownStarted = true;
-            document.getElementById('gameDashboard').style.display = 'flex';
-            
             timerInterval = setInterval(() => {
                 countdown--;
-                document.getElementById('gameTimer').innerText = "Game starting in " + countdown + "s";
-                
-                // Taphattoota simulaatio dabalamaa deemu
-                players += Math.floor(Math.random() * 5) + 2; 
-                derash = players * 10;
-                document.getElementById('playerCount').innerText = players;
-                document.getElementById('derashValue').innerText = derash + " Br";
-
+                document.getElementById('gameTimer').innerText = "Game starting in ⏱ " + countdown + "s";
                 if (countdown <= 0) {
                     clearInterval(timerInterval);
-                    startGame();
+                    goToGameScreen();
                 }
             }, 1000);
         }
 
-        function joinGame() {
-            if(selectedCards.size === 0) {
-                alert("Maaloo dursa kaardii kamiyyuu takka filadhaa!");
-                return;
-            }
-            myCards = Array.from(selectedCards);
-            document.getElementById('joinBtn').innerText = "YOU ARE IN GAME";
+        function confirmSelection() {
+            if(selectedCards.size === 0) return alert("Maaloo dursa kaardii filadhaa!");
+            document.getElementById('joinBtn').innerText = "WAITED FOR START...";
             document.getElementById('joinBtn').disabled = true;
-            document.getElementById('joinBtn').style.backgroundColor = "#20303c";
         }
 
-        function startGame() {
-            gameStarted = true;
-            document.getElementById('gameTimer').innerText = "🔴 TAPHA KEESSA JIRTAN!";
+        // TTS Amharic Function
+        function speakAmharic(letter, number) {
+            let textToSpeak = letter + " " + amharicVoiceNums[number];
+            let utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'am-ET'; 
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function getBingoLetter(num) {
+            if (num <= 15) return "B";
+            if (num <= 30) return "I";
+            if (num <= 45) return "N";
+            if (num <= 60) return "G";
+            return "O";
+        }
+
+        function goToGameScreen() {
+            document.getElementById('selectionScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'flex';
+            
+            // Generate live screen grid (only show chosen cards for visibility)
+            const liveGrid = document.getElementById('liveGrid');
+            selectedCards.forEach(num => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerText = num;
+                card.id = "live_" + num;
+                liveGrid.appendChild(card);
+            });
+
+            startCallingNumbers();
+        }
+
+        function startCallingNumbers() {
             let pool = Array.from({length: 75}, (_, i) => i + 1);
-            let calledNumbers = [];
             let matchCount = 0;
+            let currentDerash = selectedCards.size * 8;
 
             gameInterval = setInterval(() => {
                 if (pool.length === 0) {
@@ -114,28 +145,29 @@
                 }
                 let randIndex = Math.floor(Math.random() * pool.length);
                 let num = pool.splice(randIndex, 1)[0];
-                calledNumbers.push(num);
+                let letter = getBingoLetter(num);
 
-                // Afaan Amharic kanaan waami
-                document.getElementById('callBox').innerText = "🔢 " + num + " (" + amharicNums[num] + ")";
+                document.getElementById('callBox').innerText = letter + "-" + num;
+                speakAmharic(letter, num);
 
-                // Kaardii keenya irratti yoo argame match godhi
-                if (myCards.includes(num)) {
-                    document.getElementById("card_" + num).classList.add('matched');
+                if (selectedCards.has(num)) {
+                    document.getElementById("live_" + num).classList.add('matched');
                     matchCount++;
                 }
 
-                // Simulaatio: Namni biraa dursa xumure ykn nuyi xumurre (bifa salphaan Bingo ta'uu)
-                if (matchCount === myCards.length && myCards.length > 0) {
+                // If User Wins Bingo
+                if (matchCount === selectedCards.size && selectedCards.size > 0) {
                     clearInterval(gameInterval);
-                    document.getElementById('callBox').innerText = "🎉 BINGO! Ati moatteetta!";
-                    document.getElementById('userBalance').innerText = derash + " Br";
-                } else if (Math.random() < 0.05 && calledNumbers.length > 15) { 
-                    // Taphattoota biroo keessaa namni tokko yoo moate
+                    document.getElementById('callBox').innerText = "🎉 BINGO! Ati Moatteetta!";
+                    totalWallet += currentDerash;
+                    document.getElementById('userBalance').innerText = totalWallet + " Br";
+                } 
+                // Bot simulation winning chance
+                else if (Math.random() < 0.04 && pool.length < 55) {
                     clearInterval(gameInterval);
-                    document.getElementById('callBox').innerText = "😔 👤 Player #" + Math.floor(Math.random()*100) + " BINGO jedheera!";
+                    document.getElementById('callBox').innerText = "😔 Player #" + Math.floor(Math.random() * 50 + 1) + " BINGO Jedhe!";
                 }
-            }, 3000); // Sekondii 3 3n waama
+            }, 3500); 
         }
     </script>
 </body>
