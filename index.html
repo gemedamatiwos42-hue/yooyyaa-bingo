@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="om">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yooyyaa Bingo</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #0f1c24; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 10px; }
+        .header-stats { display: flex; justify-content: space-around; background: #162a35; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; }
+        .stat-val { color: #26a69a; font-weight: bold; }
+        .grid-container { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; max-width: 100%; padding: 5px; }
+        .cell { background: #1a313d; border: 1px solid #254253; padding: 12px 0; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .cell.selected { background: #26a69a; border-color: #4db6ac; }
+        .btn-join { background: #26a69a; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header-stats">
+        <div>MEDEB<br><span class="stat-val">10 Br</span></div>
+        <div>PLAYERS<br><span class="stat-val">31</span></div>
+        <div>BALANCE<br><span class="stat-val">0 Br</span></div>
+        <div>DERASH<br><span class="stat-val">272 Br</span></div>
+    </div>
+
+    <p style="color: #4db6ac;">Game starting in 12s</p>
+
+    <div class="grid-container" id="bingo-grid"></div>
+
+    <button class="btn-join" onclick="joinGame()">JOIN GAME</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const grid = document.getElementById('bingo-grid');
+        let selected = [];
+
+        for (let i = 1; i <= 42; i++) {
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = i;
+            cell.onclick = function() {
+                if (cell.classList.contains('selected')) {
+                    cell.classList.remove('selected');
+                    selected = selected.filter(item => item !== i);
+                } else if (selected.length < 5) {
+                    cell.classList.add('selected');
+                    selected.push(i);
+                } else {
+                    tg.showAlert("Kaartaa 5 qofa filachuu dandeessa!");
+                }
+            };
+            grid.appendChild(cell);
+        }
+
+        function joinGame() {
+            if(selected.length === 0) {
+                tg.showAlert("Maaloo yoo xiqqaate kaartaa tokko filadhaa!");
+                return;
+            }
+            tg.showPopup({
+                title: "Yooyyaa Bingo",
+                message: "Insufficient balance. Need: 10 Br for one card.",
+                buttons: [{type: "ok"}]
+            });
+        }
+    </script>
+</body>
+</html>
